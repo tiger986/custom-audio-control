@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Document</title>
+	
+	<style type="text/css">
+		*{
+			margin: 0;
+			padding: 0;
+		}
+		.box{
+			width: 200px;
+			height: 40px;
+			background: orange;
+			font-size: 16px;
+			color: #ffffff;
+			line-height: 40px;
+			text-align: center;
+			margin: 200px auto;
+			cursor: pointer;
+		}
+		
+		.coursePlayDetail_con_play_audio{
+			width: 375px;
+			height: 108px;
+			margin: 200px auto;
+			overflow: hidden;
+		}
+		.audio_head{
+			width: 333px;
+			height: 12px;
+			margin: 22px auto 0;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+		.audio_head_time{
+			width: 65px;
+			height: 12px;
+			font-size: 12px;
+			color: #999999;
+			line-height: 12px;
+			text-align: center;
+		}
+		.audio_head_bar{
+			width: 190px;
+			height: 3px;	
+			background: #CFCFCF;
+			-webkit-border-radius: 20px;
+			-moz-border-radius: 20px;
+			border-radius: 20px;
+		}
+		.audio_head_bar_orange{
+			width: 0;
+			height: 3px;
+			background-color: orange;
+		}
+		.audio_btn{
+			width: 200px;
+			height: 44px;
+			margin: 13px auto 0;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+		.audio_btn_back,
+		.audio_btn_go{
+			width: 23px;
+			height: 24px;
+			background: red;
+		}
+		.audio_btn_back{
+			background: url(img/back.png) no-repeat center;
+			background-size: 23px 24px;
+		}
+		.audio_btn_go{
+			background: url(img/go.png) no-repeat center;
+			background-size: 23px 24px;
+		}
+		.audio_btn_back_play{
+			width: 44px;
+			height: 44px;
+			background: url(img/stop.png) no-repeat center;
+			background-size: 44px 44px;
+		}
+		.audio_btn .stop{
+			background: url(img/play.png) no-repeat center;
+			background-size: 44px 44px;
+		}
+	</style>
+	
+	<script src="jquery-1.10.1.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+</head>
+<body>
+	<!--<div class="box" id="b1">点击播放</div>-->
+	
+	<div class="coursePlayDetail_con_play_audio">
+		<audio id="myAudio" src="music.mp3" autoplay="autoplay"></audio>
+		
+		<div class="audio_head">
+			<div class="audio_head_time playTime">00:00:00</div>
+			<div class="audio_head_bar">
+				<div class="audio_head_bar_orange"></div>
+			</div>
+			<div class="audio_head_time totalTime">00:00:00</div>
+		</div>
+		<div class="audio_btn">
+			<div class="audio_btn_back"></div>
+			<div class="audio_btn_back_play"></div>
+			<div class="audio_btn_go"></div>
+		</div>
+	</div>
+</body>
+</html>
+
+<script type="text/javascript">
+	
+	//js生成video
+	/*var audio=document.createElement("audio");
+	$(".box").click(function(){
+		audio.pause();		
+		audio.src="music.mp3";
+		audio.addEventListener("canplaythrough", function () {
+            //alert('音频文件已经准备好，随时待命');
+            audio.play();
+        }, false);
+	});*/
+	
+	
+	var audio = $('#myAudio').get(0);
+	
+	$(".audio_btn_back_play").click(function(){
+		if(audio.paused){
+            audio.play();
+            $(this).removeClass("stop");
+        } else{
+            audio.pause();
+            $(this).addClass("stop");
+        }
+	})
+	
+	/*//停止
+	function aStop() {
+		audio.currentTime = 0;
+		audio.pause();
+	}*/
+	
+	/*//跳到第50秒
+	function aSkip() {
+		audio.currentTime = 50;
+		audio.play();
+	}*/
+	
+	//快进15秒
+	$(".audio_btn_go").click(function() {
+		var a = audio.currentTime;
+        var b = audio.duration;
+        if ((b - a) > 15) {
+            audio.currentTime += 15;
+            audio.play();
+	       	$(".audio_btn_back_play").removeClass("stop");
+        } else {
+            audio.currentTime = b;
+        }
+	})
+	
+	//快退10秒
+	$(".audio_btn_back").click(function() {
+		audio.currentTime -= 15;
+		audio.play();
+		$(".audio_btn_back_play").removeClass("stop");
+	})
+	
+	//总时长
+	$('#myAudio').on("loadedmetadata",function () {//loadedmetadata事件为音频/视频文件加载完数据后触发
+        //alert(this.duration)
+        $(".totalTime").html(time(this.duration));
+  	});	//！注意：此处的$('#audioTag')加载loadedmetadata事件不需要get(0);
+	
+	//当前播放时间和进度条
+	audio.addEventListener("timeupdate", showtime, true);//timeupdate 事件是在播放位置改变时触发
+	
+	function showtime() {
+		var s = audio.currentTime;
+		$(".playTime").html(time(s));
+		var allTime = audio.duration;
+        var allSize = $(".audio_head_bar").width();
+        var nowSize = ((s / allTime) * allSize).toFixed();
+        $(".audio_head_bar_orange").css("width", nowSize + "px");
+	}
+	
+	//播放完成
+	audio.addEventListener('ended',audioEnded,false); //ended 为监听播放完成事件
+
+    //audio.addEventListener("play", fn); //监听开始播放
+	
+	function audioEnded() {
+	    audio.currentTime=0;
+	    audio.pause();
+	    $(".audio_head_bar_orange").css("width", "0px");
+	    $(".audio_btn_back_play").addClass("stop");
+	}
+	
+	//拖动进度条(移动端)
+	$(".audio_head_bar").on('touchend',function(e){         	
+		var x = e.originalEvent.changedTouches[0].clientX-$(".audio_head_bar").offset().left;
+        var X = x < 0 ? 0 : x;          
+        var W = $(this).width();
+        var place = X > W ? W : X;
+        audio.currentTime = (place/W).toFixed(2)*audio.duration;
+        $(".audio_head_bar_orange").css({width:(place/W).toFixed(2)*100+"%"})
+    });
+    
+    //在微信和QQ浏览器中audio标签的autoplay会不生效,则需引入处理此问题的js文件并做函数定义及触发
+    //触发自动播放函数
+    audioAutoPlay('myAudio');
+    
+    //自动播放函数
+    function audioAutoPlay(id){
+        var audio = document.getElementById(id),
+        play = function(){
+            audio.play();
+            document.removeEventListener("touchstart",play, false);
+        };
+        audio.play();
+        document.addEventListener("WeixinJSBridgeReady", function () {
+            play();
+        }, false);
+        document.addEventListener('YixinJSBridgeReady', function() {
+            play();
+        }, false);
+        document.addEventListener("touchstart",play, false);
+    }
+        
+	
+	//格式化时间
+	function time(s) {
+		var time = 0;
+		var hour = Math.floor(s / 3600);
+        var min = Math.floor(s / 60) % 60;
+        var sec = Math.floor(s % 60);
+        if (hour < 10) {
+            time = '0' + hour + " : ";
+        } else {
+            time = hour + " : ";
+        }
+        if (min < 10) {
+            time += "0";
+        }
+        time += min + " : ";
+        if (sec < 10) {
+            time += "0";
+        }
+        time += sec;
+        return time;
+    }
+
+</script>
